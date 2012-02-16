@@ -7,6 +7,39 @@ import sys
 from optparse import OptionParser
 
 
+# taken from [1], which was taken from [3] 
+def neumann_bound(f):
+    nrow, ncol = f.shape
+    g = f
+    g([0, nrow-1],[0, ncol-1]) = g([2, nrow-3],[2, ncol-3])
+    g([0, nrow-1],1:-2) = g([2, nrow-3],1:-2)
+    g(1:-2,[0, ncol-1]) = g(1:-2,[2, ncol-3])
+    return g
+
+# taken from [1], which was taken from [3]
+def curvature(u):
+    ux, uy = np.gradient(u)
+    normDu = np.sqrt((ux**2)+(uy**2)+1e-10)
+
+    Nx = ux/normDu
+    Ny = uy/normDu
+    nxx, junk = np.gradient(Nx)
+    junk, nyy = np.gradient(Ny)
+    k = nxx + nyy
+    return k
+    
+
+def reg_heaviside(x, epsilon):
+    """Regularized heaviside step function from equation 8 in [4]"""
+    return 0.5*(1 + (2 / np.pi) * arctan(x / epsilon))
+    
+def reg_dirac(x, epsilon):
+    """Regularized delta dirac function from equation 9 in [4], is 
+    the derivative of the regularized Heaviside step function """
+    return (1 / np.pi) * (epsilon / (epsilon**2 + x**2))
+    
+def evolve(u):
+    
 
 if __name__ == '__main__':
     parser = OptionParser()
@@ -47,4 +80,5 @@ if __name__ == '__main__':
 # References:
 # [1] - http://www.mathworks.com/matlabcentral/fileexchange/34548-active-contour-without-edge
 # [2] - Chan, T.F.; Vese, L.A.; , "Active contours without edges," Image Processing, IEEE Transactions on , vol.10, no.2, pp.266-277, Feb 2001 URL: http://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=902291&isnumber=19508
-
+# [3] - http://www.mathworks.com/matlabcentral/fileexchange/12711-level-set-for-image-segmentation
+# [4] - Chunming Li; Chiu-Yen Kao; Gore, J.C.; Zhaohua Ding; , "Minimization of Region-Scalable Fitting Energy for Image Segmentation," Image Processing, IEEE Transactions on , vol.17, no.10, pp.1940-1949, Oct. 2008 URL: http://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=4623242&isnumber=4623174
