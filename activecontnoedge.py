@@ -38,11 +38,23 @@ def reg_dirac(x, epsilon):
     the derivative of the regularized Heaviside step function """
     return (1 / np.pi) * (epsilon / (epsilon**2 + x**2))
     
-def evolve(u):
-    
+def evolve(img, u, num_iterations, epsilon, thresh=0.5):
+    """From [1]"""
+    for i in range(num_iterations):
+        u = neumann_bound(u)
+        k = curvature(u)
+        
+        delta = reg_dirac(u, epsilon)
+        heaviside = reg_heaviside(u, epsilon)
+        
+        inside_i = np.where(heaviside < thresh)
+        outside_i = np.where(heaviside >= thresh)
+        c1 = img[inside_i].mean()
+        c2 = img[outside_i].mean()
+        
 
 if __name__ == '__main__':
-    parser = OptionParser()
+    parser = OptionParser()about:startpage
     #parser.add_option("-n", "--no-dir", help="don't plot direction on the image", action="store_true", default=False)
     (options, args) = parser.parse_args()
     
