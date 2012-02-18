@@ -2,6 +2,7 @@ from __future__ import division
 import matplotlib.pyplot as plt
 import Image
 import scipy.ndimage
+import scipy.spatial
 import numpy as np
 import sys
 from optparse import OptionParser
@@ -27,7 +28,6 @@ def central_curvature(u):
     junk, nyy = np.gradient(Ny)
     k = nxx + nyy
     return k
-    
 
 def reg_heaviside(x, epsilon):
     """Regularized heaviside step function from equation 8 in [4]"""
@@ -46,8 +46,6 @@ def evolve(u0, img, timestep, epsilon, mu, v, lambda1, lambda2, pc, thresh=0.5):
     u = neumann_bound(u)
     K = central_curvature(u) # div(grad(u)/mod(grad(u)))
     
-    print "k.mean", K.mean()
-    
     delta = reg_dirac(u, epsilon)
     heaviside = reg_heaviside(u, epsilon)
     
@@ -62,13 +60,14 @@ def evolve(u0, img, timestep, epsilon, mu, v, lambda1, lambda2, pc, thresh=0.5):
     #inout = np.zeros(img.shape)
     #inout[inside_i] = 1
     #inout[outside_i] = -1
-    #plt.imshow(inout)
-    #plt.colorbar()
-    #plt.show()
+    plt.imshow(K)
+    plt.colorbar()
+    plt.show()
     
-    print "c1", c1, "c2", c2
+    
     
     euler_lagrange_eqn = delta * (mu * K - v - lambda1 * ((img - c1)**2) + lambda2 * ((img - c2)**2)) # from [1] and [2] (eqn 9)
+    
     
     # this next term is described as a "distance regularation term" in [1] and can be seen in equation 15 of [4] where it is constant * (laplacian(u) - K)
     # in [1] 4*del2(u) is the finite difference approximation of laplaces differential operator according to [5]
@@ -105,10 +104,17 @@ if __name__ == '__main__':
     #thresh = 0.5
     parser.add_option("--thresh", action="store", type="float", default=0.5) # threshold used for determining which areas are inside and outside the contour
     parser.add_option("-p", "--hide-progress-image", action="store_true", default=False)
+    parser.add_option("-w", "--use-webcam", action="store_true", default=False)
+    
     
     (options, args) = parser.parse_args()
     
-    imgin = Image.open(args[0])
+    if options.use_webcam:
+        from VideoCapture import Device
+        cam = Device()
+        imgin = cam.getImage()
+    else:
+        imgin = Image.open(args[0])
 	
     imgin = imgin.convert("L") # convert to greyscale (luminance)
     
@@ -131,6 +137,7 @@ if __name__ == '__main__':
     if not options.hide_progress_image:
         fig = plt.figure()
         ax = fig.add_subplot(111)
+        plt.set_cmap(plt.cm.gray)
     
     for i in range(options.num_iterations):
         u = evolve(u, img, options.timestep, options.epsilon, options.mu, options.v, options.lambda1, options.lambda2, options.pc, options.thresh)
@@ -138,19 +145,25 @@ if __name__ == '__main__':
         
         if not options.hide_progress_image:
             ax.clear()
-            ax.imshow(u)
+            #ax.imshow(u)
+            ax.imshow(img)
+            cont = ax.contour(u, [0, 0], colors='r')
             plt.show(block=False)
             plt.draw()
                     
     #############################################################
     
-    
+    if options.hide_progress_image:
+        plt.imshow(img)
+        plt.set_cmap(plt.cm.gray)
+        cont = plt.contour(u, [0, 0], colors='r')
+        
     #ax3d = fig.add_subplot(111, projection='3d')
     
-    fig2 = plt.figure()
-    plt.set_cmap(plt.cm.gray)
-    plt.imshow(img)
-    cont = plt.contour(u, [0, 0], colors='r')
+    #fig2 = plt.figure()
+    #plt.imshow(u)
+    #plt.colorbar()
+    #cont = plt.contour(u, [0, 0], colors='r')
     #plt.clabel(cont, inline=1, fontsize=10)
     
     
