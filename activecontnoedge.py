@@ -210,7 +210,7 @@ if __name__ == '__main__':
         
     plt.figure()
     plt.imshow(u < 0)
-    plt.colorbar()
+    #plt.colorbar()
     plt.set_cmap(plt.cm.gray)
     #contf = plt.contourf(u, [0, 0], colors='r')
         
