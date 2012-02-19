@@ -49,7 +49,7 @@ def reg_dirac(x, epsilon):
     the derivative of the regularized Heaviside step function """
     return (epsilon / np.pi) / ((epsilon**2) + (x**2))
     
-def evolve(u0, img, timestep, epsilon, mu, v, lambda1, lambda2, pc, thresh=0.5, reverse_inequalities=False):
+def evolve(u0, img, timestep, epsilon, mu, v, lambda1, lambda2, pc, thresh=0.5, reverse_inequalities=False, use_heaviside=False):
     """To help us understand the algorithm the following code has been ported from [1].
     The algorithm seems to use the central finite differences to solve the PDEs, following
     the approach taken in [4]. Gradient descent is used to mimimise the contour energy."""
@@ -64,11 +64,19 @@ def evolve(u0, img, timestep, epsilon, mu, v, lambda1, lambda2, pc, thresh=0.5, 
     #inside_i = np.where(heaviside >= thresh)
     #outside_i = np.where(heaviside < thresh)
     if reverse_inequalities:
-        inside_i = np.where(heaviside <= thresh)
-        outside_i = np.where(heaviside > thresh)
+        if use_heaviside:
+            inside_i = np.where(heaviside <= thresh)
+            outside_i = np.where(heaviside > thresh)
+        else:
+            inside_i = np.where(u <= 0)
+            outside_i = np.where(u > 0)
     else:
-        inside_i = np.where(heaviside >= thresh)
-        outside_i = np.where(heaviside < thresh)
+        if use_heaviside:
+            inside_i = np.where(heaviside >= thresh)
+            outside_i = np.where(heaviside < thresh)
+        else:
+            inside_i = np.where(u >= 0)
+            outside_i = np.where(u < 0)
     
     c1 = img[inside_i].mean()
     c2 = img[outside_i].mean()
@@ -110,7 +118,7 @@ if __name__ == '__main__':
     #timestep = 0.1 # from [1]
     parser.add_option("--timestep", action="store", type="float", default=0.1) # from [1]
     #v = 1.0 # v is a constraint on the area inside the curve, value of 1 taken from from [1], but in [2] it is set to zero #################### SHOULD THIS BE SET TO ZERO    
-    parser.add_option("--v", action="store", type="float", default=1.0) # v is a constraint on the area inside the curve, value of 1 taken from from [1], but in [2] it is set to zero #################### SHOULD THIS BE SET TO ZERO    
+    parser.add_option("--v", action="store", type="float", default=0.0) # v is a constraint on the area inside the curve, value of 1 taken from from [1], but in [2] it is set to zero #################### SHOULD THIS BE SET TO ZERO    
     #mu = 1.0 # mu is a constraint upon the length of the curve, value of 1 taken from [1]
     parser.add_option("--mu", action="store", type="float", default=1.0) # mu is a constraint upon the length of the curve, value of 1 taken from [1]
     #epsilon = 1.0 # epsilon is a parameter of the regularisation of the heaviside function and dirac delta function value taken from [1]
@@ -123,7 +131,7 @@ if __name__ == '__main__':
     parser.add_option("-w", "--use-webcam", action="store_true", default=False)
     parser.add_option("--noise", action="store", type="float", default=0.0)
     parser.add_option("-r", "--reverse-inequalities", action="store_true", default=False)
-
+    parser.add_option("--use-heaviside", action="store_true", default=False)
     
     
     (options, args) = parser.parse_args()
@@ -181,7 +189,7 @@ if __name__ == '__main__':
         plt.set_cmap(plt.cm.gray)
     
     for i in range(options.num_iterations):
-        u = evolve(u, img, options.timestep, options.epsilon, options.mu, options.v, options.lambda1, options.lambda2, options.pc, thresh=options.thresh, reverse_inequalities=options.reverse_inequalities)
+        u = evolve(u, img, options.timestep, options.epsilon, options.mu, options.v, options.lambda1, options.lambda2, options.pc, thresh=options.thresh, reverse_inequalities=options.reverse_inequalities, use_heaviside=options.use_heaviside)
         print i, "of", options.num_iterations
         
         if not options.hide_progress_image:
@@ -196,7 +204,7 @@ if __name__ == '__main__':
     
     if options.hide_progress_image:
         plt.imshow(img)
-        plt.colorbar()
+        #plt.colorbar()
         plt.set_cmap(plt.cm.gray)
         cont = plt.contour(u, [0, 0], colors='r')
         
