@@ -18,7 +18,7 @@ def neumann_bound(f):
     return g
 
 # taken from [1], which was taken from [3]
-def central_curvature_old(u):
+def central_curvature(u):
     ux, uy = np.gradient(u)
     normDuX = np.sqrt((ux**2)+(uy**2)+1e-10)
     normDuY = np.sqrt((ux**2)+(uy**2)+1e-10)
@@ -30,7 +30,7 @@ def central_curvature_old(u):
     k = nxx + nyy
     return k
     
-def central_curvature(u):
+def central_curvature_other(u):
     # this is just calculating div(grad(u)/norm(grad(u))) - look up definition of divergance
     grad_u = np.gradient(u)
     norm_grad_u = np.linalg.norm(grad_u)
@@ -49,23 +49,26 @@ def reg_dirac(x, epsilon):
     the derivative of the regularized Heaviside step function """
     return (epsilon / np.pi) / ((epsilon**2) + (x**2))
     
-def evolve(u0, img, timestep, epsilon, mu, v, lambda1, lambda2, pc, thresh=0.5):
+def evolve(u0, img, timestep, epsilon, mu, v, lambda1, lambda2, pc, thresh=0.5, reverse_inequalities=False):
     """To help us understand the algorithm the following code has been ported from [1].
     The algorithm seems to use the central finite differences to solve the PDEs, following
     the approach taken in [4]. Gradient descent is used to mimimise the contour energy."""
     u = u0.copy()
-    u = neumann_bound(u)
+    #u = neumann_bound(u)
     K = central_curvature(u) # div(grad(u)/mod(grad(u)))
     
     delta = reg_dirac(u, epsilon)
     heaviside = reg_heaviside(u, epsilon)
     
     # BUG FOUND HERE: The inequalities here were the wrong way around
-    inside_i = np.where(heaviside >= thresh)
-    outside_i = np.where(heaviside < thresh)
-    #inside_i = np.where(heaviside <= thresh)
-    #outside_i = np.where(heaviside > thresh)
-    
+    #inside_i = np.where(heaviside >= thresh)
+    #outside_i = np.where(heaviside < thresh)
+    if reverse_inequalities:
+        inside_i = np.where(heaviside <= thresh)
+        outside_i = np.where(heaviside > thresh)
+    else:
+        inside_i = np.where(heaviside >= thresh)
+        outside_i = np.where(heaviside < thresh)
     
     c1 = img[inside_i].mean()
     c2 = img[outside_i].mean()
@@ -119,7 +122,8 @@ if __name__ == '__main__':
     parser.add_option("-p", "--hide-progress-image", action="store_true", default=False)
     parser.add_option("-w", "--use-webcam", action="store_true", default=False)
     parser.add_option("--noise", action="store", type="float", default=0.0)
-    
+    parser.add_option("-r", "--reverse-inequalities", action="store_true", default=False)
+
     
     
     (options, args) = parser.parse_args()
@@ -155,6 +159,7 @@ if __name__ == '__main__':
     cid = fig.canvas.mpl_connect('button_press_event', onclick)
     
     plt.imshow(img)
+    plt.set_cmap(plt.cm.gray)
     plt.show()
     
     #############################################################
@@ -176,7 +181,7 @@ if __name__ == '__main__':
         plt.set_cmap(plt.cm.gray)
     
     for i in range(options.num_iterations):
-        u = evolve(u, img, options.timestep, options.epsilon, options.mu, options.v, options.lambda1, options.lambda2, options.pc, options.thresh)
+        u = evolve(u, img, options.timestep, options.epsilon, options.mu, options.v, options.lambda1, options.lambda2, options.pc, thresh=options.thresh, reverse_inequalities=options.reverse_inequalities)
         print i, "of", options.num_iterations
         
         if not options.hide_progress_image:
@@ -194,6 +199,12 @@ if __name__ == '__main__':
         plt.colorbar()
         plt.set_cmap(plt.cm.gray)
         cont = plt.contour(u, [0, 0], colors='r')
+        
+    plt.figure()
+    plt.imshow(u < 0)
+    plt.colorbar()
+    plt.set_cmap(plt.cm.gray)
+    #contf = plt.contourf(u, [0, 0], colors='r')
         
     #ax3d = fig.add_subplot(111, projection='3d')
     
