@@ -129,7 +129,7 @@ if __name__ == '__main__':
     parser.add_option("--thresh", action="store", type="float", default=0.5) # threshold used for determining which areas are inside and outside the contour
     parser.add_option("-p", "--hide-progress-image", action="store_true", default=False)
     parser.add_option("-w", "--use-webcam", action="store_true", default=False)
-    parser.add_option("--noise", action="store", type="float", default=0.0)
+    parser.add_option("--noise", action="store", type="string", default="none")
     parser.add_option("-r", "--reverse-inequalities", action="store_true", default=False)
     parser.add_option("--use-heaviside", action="store_true", default=False)
     
@@ -148,9 +148,16 @@ if __name__ == '__main__':
     img = np.asarray(imgin)
     img = img.astype(np.float32) # convert to a floating point
     
+    if options.noise != "none":
+        if options.noise == "mean":
+            noise_width = img.mean() * 0.1
+            print noise_width
+        else:
+            noise_width = float(options.noise)
+            
+        noise = np.random.normal(0.0, noise_width, img.shape)
+        img += noise
     
-    noise = np.random.randn(img.shape[0], img.shape[1]) * options.noise
-    img += noise
     
     if options.median_filter_size != 0:
         img = scipy.ndimage.filters.median_filter(img, options.median_filter_size)
