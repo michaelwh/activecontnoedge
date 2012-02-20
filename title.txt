@@ -1,0 +1,6 @@
+#
+# ELEC6024 submission definition
+#
+[Talk]
+Name: John Charlesworth and Michael Hodgson
+Title: Active Contours Without Edges

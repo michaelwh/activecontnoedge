@@ -1,0 +1,6 @@
+References:
+[1] - http://www.mathworks.com/matlabcentral/fileexchange/34548-active-contour-without-edge
+[2] - Chan, T.F.; Vese, L.A.; , "Active contours without edges," Image Processing, IEEE Transactions on , vol.10, no.2, pp.266-277, Feb 2001 URL: http://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=902291&isnumber=19508
+[3] - http://www.mathworks.com/matlabcentral/fileexchange/12711-level-set-for-image-segmentation
+[4] - Chunming Li; Chiu-Yen Kao; Gore, J.C.; Zhaohua Ding; , "Minimization of Region-Scalable Fitting Energy for Image Segmentation," Image Processing, IEEE Transactions on , vol.17, no.10, pp.1940-1949, Oct. 2008 URL: http://www.ncbi.nlm.nih.gov/pmc/articles/PMC2720140/
+[5] - http://www.mathworks.co.uk/help/techdoc/ref/del2.html
